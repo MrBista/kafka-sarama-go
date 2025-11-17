@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -48,6 +49,11 @@ func (p *Producer) Close() error {
 	return p.producer.Close()
 }
 
+type User struct {
+	Event  string `json:"event"`
+	UserId int64  `json:"userId"`
+}
+
 func main() {
 	fmt.Println("Hello world")
 	brokers := []string{"localhost:9092"}
@@ -55,11 +61,22 @@ func main() {
 
 	producer, err := NewProducer(brokers)
 	if err != nil {
-		log.Fatal("Failed to create producer: %v", err)
+		log.Fatalf("Failed to create producer: %v", err)
 	}
 	defer producer.Close()
 
-	message := "Hello, Kafka baru lagi mantap"
+	userNew := User{
+		Event:  "UserCreated",
+		UserId: 1,
+	}
+
+	byteJson, err := json.Marshal(userNew)
+
+	if err != nil {
+		log.Fatalf("Failed to marshal json")
+	}
+
+	message := string(byteJson)
 
 	partion, offset, err := producer.SendMessage(topic, message)
 

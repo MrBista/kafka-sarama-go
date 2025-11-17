@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -64,6 +66,11 @@ func (c *Consumer) Close() error {
 	return c.consumer.Close()
 }
 
+type User struct {
+	Event  string `json:"event"`
+	UserId int64  `json:"userId"`
+}
+
 func main() {
 	brokers := []string{"localhost:9092"}
 	topic := "test-topic"
@@ -87,6 +94,16 @@ func main() {
 			log.Printf("Received message: partition=%d, "+
 				"offset=%d, value=%s",
 				msg.Partition, msg.Offset, string(msg.Value))
+			jsonData := new(User)
+			errParse := json.Unmarshal(msg.Value, &jsonData)
+			if errParse != nil {
+				log.Printf("Faild read json")
+			}
+			if jsonData != nil {
+				fmt.Printf("Event received: ", jsonData.Event)
+
+			}
+
 		}
 	}()
 
